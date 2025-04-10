@@ -1,7 +1,23 @@
 <h1>FlowScribe 결과</h1>
 
+<form method="POST" action="/flowscribe/filter">
+  <label>파일 선택:</label>
+  <select name="fileName" onchange="this.form.submit()">
+    <% Object.keys(fileMap).forEach(file => { %>
+      <option value="<%= file %>" <%= file === selectedFile ? 'selected' : '' %>><%= file %></option>
+    <% }) %>
+  </select>
+
+  <label>시작 함수:</label>
+  <select name="startFunc" onchange="this.form.submit()">
+    <% (fileMap[selectedFile] || []).forEach(func => { %>
+      <option value="<%= func %>" <%= func === selectedFunc ? 'selected' : '' %>><%= func %></option>
+    <% }) %>
+  </select>
+</form>
+
 <div class="mermaid">
-<%- mermaidCode %>
+  <%- mermaidCode %>
 </div>
 
 <script type="module">
