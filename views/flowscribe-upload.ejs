@@ -1,11 +1,82 @@
-<!DOCTYPE html>
-<html>
-<head><title>Upload JS File</title></head>
-<body>
-  <h1>JS 파일 업로드</h1>
-  <form action="/flowscribe/upload" method="POST" enctype="multipart/form-data">
-    <input type="file" name="sourceFile" />
-    <button type="submit">업로드</button>
-  </form>
-</body>
-</html>
+<h1>FlowScribe 업로드</h1>
+
+<div id="dropArea" style="border: 2px dashed #aaa; padding: 40px; text-align: center;">
+  <p>여러 JS 파일을 여기에 드래그하거나 클릭하여 업로드하세요</p>
+  <input type="file" name="files" id="fileInput" multiple hidden>
+  <button type="button" onclick="document.getElementById('fileInput').click()">파일 선택</button>
+</div>
+
+<div id="fileList" style="margin-top: 20px; text-align: center;"></div>
+
+<br>
+<button id="submitBtn">업로드</button>
+
+<script>
+  let selectedFiles = [];
+
+  const dropArea = document.getElementById('dropArea');
+  const fileInput = document.getElementById('fileInput');
+  const submitBtn = document.getElementById('submitBtn');
+  const fileList = document.getElementById('fileList');
+
+  const renderFileList = () => {
+    if (!selectedFiles.length) {
+      fileList.innerHTML = '<p style="color: gray;">선택된 파일 없음</p>';
+      return;
+    }
+    fileList.innerHTML = `
+      <p><strong>${selectedFiles.length}</strong>개 파일 선택됨:</p>
+      <ul style="list-style: none; padding: 0;">
+        ${selectedFiles.map(file => `<li>${file.name}</li>`).join('')}
+      </ul>
+    `;
+  };
+
+  dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.style.background = '#f0f0f0';
+  });
+
+  dropArea.addEventListener('dragleave', () => {
+    dropArea.style.background = '';
+  });
+
+  dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.style.background = '';
+    selectedFiles = Array.from(e.dataTransfer.files);
+    renderFileList();
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    selectedFiles = Array.from(e.target.files);
+    renderFileList();
+  });
+
+  submitBtn.addEventListener('click', () => {
+    if (!selectedFiles.length) {
+      alert('파일을 선택해주세요!');
+      return;
+    }
+
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('files', file));
+
+    fetch('/flowscribe/upload', {
+      method: 'POST',
+      body: formData
+    })
+      .then(res => res.text())
+      .then(html => {
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(err => {
+        console.error('업로드 실패:', err);
+        alert('업로드 중 오류가 발생했습니다.');
+      });
+  });
+
+  renderFileList();
+</script>
